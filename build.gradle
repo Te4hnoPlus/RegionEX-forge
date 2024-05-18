@@ -1,0 +1,83 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        maven { url = "https://plugins.gradle.org/m2" }
+        maven { url = "https://repo.spongepowered.org/maven" }
+        maven { url = "https://maven.minecraftforge.net/" }
+    }
+    dependencies {
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle',
+                version: '4.1.+', changing: true
+        //classpath "org.spongepowered:mixingradle:0.7-SNAPSHOT"
+    }
+}
+
+apply plugin: 'net.minecraftforge.gradle'
+
+def name = 'te4_regionEX'
+
+version = "1.0"
+group = "plus.region"
+archivesBaseName = name
+
+sourceCompatibility = targetCompatibility = 1.8
+compileJava.options.encoding = compileTestJava.options.encoding = "UTF-8"
+
+minecraft {
+    mappings channel: 'stable', version: "39-1.12"
+
+    runs {
+        client {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+        }
+        server {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+
+        }
+    }
+}
+
+task prepareAssets(type: Copy) {
+    group = 'build'
+    from project.file('src/main/resources')
+    into project.file('build/classes/java/main')
+}
+
+repositories {
+    mavenCentral()
+    maven { url = "https://repo.spongepowered.org/maven" }
+}
+
+dependencies {
+    minecraft "net.minecraftforge:forge:1.12.2-14.23.5.2859"
+    //minecraft "net.minecraftforge:forge:1.12.2-14.23.5.2855"
+    implementation fileTree(dir: 'lib', include: ['*.jar'])
+
+    implementation 'it.unimi.dsi:fastutil:8.5.12'
+}
+
+jar {
+    from {
+        configurations.runtimeClasspath.collect {
+            if(it.name.equalsIgnoreCase("elca_lib-2.7.jar")) {
+                zipTree(it)
+            }
+        }
+    }
+}
+
+jar.finalizedBy('reobfJar')
+
+sourceSets {
+    main {
+        java {
+            srcDir 'C:/Users/Te4hnoPlus/IdeaProjects/TsonConfigurations/core/src/main/java'
+            srcDir 'C:/Users/Te4hnoPlus/IdeaProjects/RegionEX/src/main/java'
+            //srcDir 'C:/Users/Te4hnoPlus/IdeaProjects/TsonConfigurations/extensions/src/main/java'
+        }
+    }
+}
