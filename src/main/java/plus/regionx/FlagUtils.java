@@ -15,7 +15,7 @@ public class FlagUtils {
     public static boolean canEditBlock(RegionData data, UserData userData, EntityPlayer entity){
         if(canPlayerEditBlock(data))return true;
         if(entity == null)return false;
-        return userData.isMember();
+        return userData != null && userData.isMember();
     }
 
 
