@@ -1,34 +1,23 @@
-package plus.regionx;
+package plus.regionx.protect;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.BlockPos;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import plus.region.Region;
 import plus.region.RegionQuery;
+import plus.regionx.FlagUtils;
 import plus.regionx.access.WorldFieldAccess;
 import plus.regionx.access.WorldLocal;
 import plus.regionx.data.RegionData;
 
 
-public class BlockProtector {
-    private final WorldFieldAccess access;
-
+public class BlockProtector extends BaseProtector{
     public BlockProtector(WorldFieldAccess access) {
-        this.access = access;
-        MinecraftForge.EVENT_BUS.register(this);
-    }
-
-
-    @SubscribeEvent
-    public void onChunkLoad(ChunkEvent.Load event){
-        WorldLocal local = access.get(event.getWorld());
-        if(local == null) return;
-        local.ensureLoaded(event.getChunk());
+        super(access);
     }
 
 
@@ -56,7 +45,6 @@ public class BlockProtector {
     @SubscribeEvent
     public void onEntityPlace(BlockEvent.EntityPlaceEvent event){
         WorldLocal local = access.get(event.getWorld());
-        if(local == null) return;
         BlockPos pos = event.getPos();
 
         Entity entity = event.getEntity();

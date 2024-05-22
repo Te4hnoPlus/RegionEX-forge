@@ -17,10 +17,9 @@ import static plus.region.data.IoUtils.*;
 
 
 public class RegionData {
-    private static final int UUID_MAGICK = 0xffCC;
-    private ImmutableMap<UUID, Entry> data = ImmutableMap.of();
-    private long createTime;
-    private int flags;
+    ImmutableMap<UUID, Entry> data = ImmutableMap.of();
+    long createTime;
+    int flags;
 
     public Entry getOrAddEntry(EntityPlayer player){
         Entry entry = data.get(player.getUniqueID());
@@ -33,15 +32,13 @@ public class RegionData {
     }
 
 
-    public Entry getEntry(UUID uuid) {
-        return data.get(uuid);
+    public ImmutableCollection<Entry> getEntries() {
+        return data.values();
     }
 
 
-    public Entry setUnsafe(int id, String textData, long bits, byte flags) {
-        Entry entry;
-        addEntry(entry = new Entry(flags, new UUID(UUID_MAGICK, id), textData, bits));
-        return entry;
+    public Entry getEntry(UUID uuid) {
+        return data.get(uuid);
     }
 
 
@@ -53,6 +50,36 @@ public class RegionData {
     public void setFlag(int i, boolean b) {
         if(b)  flags |= i;
         else   flags &= ~i;
+    }
+
+
+    public void setFlag(RegionFlag.Base flag, boolean b) {
+        setFlag(flag.getId(), b);
+    }
+
+
+    public boolean getFlag(RegionFlag.Base flag) {
+        return getFlag(flag.getId());
+    }
+
+
+    public ExtendedFlagData getFlagExtended(RegionFlag.Advanced flag) {
+        return null;
+    }
+
+
+    public RegionData setFlagExtended(RegionFlag.Advanced flag, ExtendedFlagData value) {
+        RegionDataEx data = new RegionDataEx();
+        data.data = this.data;
+        data.createTime = this.createTime;
+        data.flags = this.flags;
+        data.setFlagExtended(flag, value);
+        return data;
+    }
+
+
+    public boolean isExtended() {
+        return false;
     }
 
 
@@ -119,11 +146,6 @@ public class RegionData {
         }
 
 
-        public boolean isMagic(){
-            return uuid.getMostSignificantBits() == UUID_MAGICK;
-        }
-
-
         public UUID getUUID() {
             return uuid;
         }
@@ -180,7 +202,13 @@ public class RegionData {
 
 
     public static void writeTo(RegionData data, OutputStream stream) throws IOException {
-        writeLong(stream, data.createTime);
+        long bits = data.createTime;
+        if(data.isExtended()) {
+            bits |= 1;
+        } else {
+            bits &= ~1;
+        }
+        writeLong(stream, bits);
         writeShort(stream, data.data.size());
 
         for(Map.Entry<UUID, Entry> entry : data.data.entrySet()) {
@@ -190,8 +218,16 @@ public class RegionData {
 
 
     public static RegionData readRegionDataFrom(InputStream stream) throws IOException, FastExitException {
-        RegionData data = new RegionData();
-        data.createTime = readLong(stream);
+        long bits = readLong(stream);
+        RegionData data;
+        if((bits & 1) == 1) {
+            data = new RegionDataEx();
+            bits &= ~1;
+        } else {
+            data = new RegionData();
+        }
+        data.createTime = bits;
+
         int size = readShort(stream);
         HashMap<UUID, Entry> temp = new HashMap<>(size);
         for(int i = 0; i < size; i++) {

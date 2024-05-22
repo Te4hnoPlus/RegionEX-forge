@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import java.util.HashMap;
 
@@ -25,7 +26,7 @@ public class MapWorldAccess implements WorldFieldAccess {
     }
 
 
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.LOWEST)
     public void onUnloadWorld(WorldEvent.Unload event) {
         synchronized (this) {
             HashMap<World, WorldLocal> copy = new HashMap<>(data);

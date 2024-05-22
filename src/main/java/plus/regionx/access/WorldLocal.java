@@ -1,12 +1,18 @@
 package plus.regionx.access;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectFunction;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import plus.region.RegionMapEx;
+import plus.region.data.db.RocksDataManager;
+import plus.regionx.MainRegionEX;
 import plus.regionx.data.RegionData;
+import plus.regionx.data.RocksRegionDataCoder;
 import java.io.File;
 import java.util.Arrays;
+import java.util.concurrent.ScheduledExecutorService;
 
 
 public class WorldLocal {
@@ -14,11 +20,59 @@ public class WorldLocal {
     private RegionMapEx regionMapEx;
     private RegionMapEx.Context context;;
     Object[] data = new Object[1];
+    public int timer;
+    private ScheduledExecutorService service;
 
     public void initIfNeed(World world){
         if(regionMapEx != null) return;
-        regionMapEx = new RegionMapEx(new File(world.getSaveHandler().getWorldDirectory(), "regionx"));
+
+        if(!world.isRemote){
+            File file = new File(world.getSaveHandler().getWorldDirectory(), "regionx");
+            regionMapEx = new RegionMapEx(file);
+
+            service = MainRegionEX.getExecutor(world.getMinecraftServer());
+            dataManager = new RocksDataManager<>(new File(file, "data").getAbsolutePath(), true, RocksRegionDataCoder.instance());
+        } else {
+            dataManager = new Int2ObjectOpenHashMap<>();
+            regionMapEx = new RegionMapEx(null);
+        }
+
         context = regionMapEx.newContext();
+    }
+
+
+    public void tick(World world) {
+        ++timer;
+        if (timer % 3600 == 0) {
+            save(world, false);
+        }
+    }
+
+
+    public void save(World world, boolean sync){
+        if (regionMapEx == null) return;
+        if (regionMapEx.hasDirty()) {
+            if(!world.isRemote) {
+                regionMapEx.flushToDisk(sync?null:service);
+            } else {
+                regionMapEx.clearDirty();
+            }
+        } else {
+            if(!world.isRemote) {
+                regionMapEx.checkToUnload(MainRegionEX.chunkIterBuilder().apply((WorldServer) world).iterator());
+            }
+        }
+    }
+
+
+    public void onUnload(){
+        if(dataManager instanceof AutoCloseable){
+            try {
+                ((AutoCloseable) dataManager).close();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
 
