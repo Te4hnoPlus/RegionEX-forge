@@ -13,7 +13,10 @@ import plus.region.Region;
 import plus.region.RegionQuery;
 import plus.regionx.access.WorldFieldAccess;
 import plus.regionx.access.WorldLocal;
+import plus.regionx.data.FlagRegistry;
 import plus.regionx.data.RegionData;
+import plus.regionx.data.flag.ExtendedFlagData;
+import plus.regionx.data.flag.StringData;
 import plus.regionx.data.flag.UserData;
 
 
@@ -61,6 +64,12 @@ public class RegionCmd extends CommandBase {
                         for (Region region : regions) {
                             RegionData data = region.getData(local.getDataManager());
                             if(data != null){
+                                String name = null;
+                                StringData flag = FlagRegistry.NAME.getValue(data);
+                                if(flag != null){
+                                    name = flag.getValue();
+                                }
+
                                 ImmutableCollection<UserData> users = data.getEntries();
                                 if(!users.isEmpty()){
                                     StringBuilder builder = new StringBuilder();
@@ -78,7 +87,7 @@ public class RegionCmd extends CommandBase {
 
                                     if(builder.length() > 0) {
                                         builder.setCharAt(builder.length()-1,']');
-                                        reply(sender, "Region: "+regFromTo(region)+", users: ["+builder);
+                                        reply(sender, "Region: "+regFromTo(region)+(name==null?"":", name: "+name)+", users: ["+builder);
                                         continue;
                                     }
                                 }
@@ -129,9 +138,11 @@ public class RegionCmd extends CommandBase {
                     }
                     data.getOrAddEntry((EntityPlayer) entity).setCreator(true);
 
+                    data = FlagRegistry.NAME.setValue(data, new StringData(name));
+
                     region.setData(local.getDataManager(), data);
 
-                    //region create test 0,0,0 10,10,10
+                    //   /region create test 0,0,0 10,10,10
                     reply(sender, "Region created: "+regFromTo(region));
 
                     break;

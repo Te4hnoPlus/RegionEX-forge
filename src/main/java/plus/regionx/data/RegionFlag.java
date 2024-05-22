@@ -1,7 +1,7 @@
 package plus.regionx.data;
 
-
 import plus.regionx.data.flag.ExtendedFlagData;
+
 
 public class RegionFlag {
     final String name;
@@ -71,12 +71,12 @@ public class RegionFlag {
 
 
         public T getValue(RegionData data){
-            return (T) data.getFlagExtended(this);
+            return (T) data.getFlag(this);
         }
 
 
-        public void setValue(RegionData data, T value){
-            data.setFlagExtended(this, value);
+        public RegionData setValue(RegionData data, T value){
+            return data.setFlagExtended(this, value);
         }
     }
 }

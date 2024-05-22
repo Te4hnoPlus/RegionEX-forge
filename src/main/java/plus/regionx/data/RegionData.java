@@ -65,7 +65,7 @@ public class RegionData implements ExtendedFlagData{
     }
 
 
-    public ExtendedFlagData getFlagExtended(RegionFlag.Advanced flag) {
+    public ExtendedFlagData getFlag(RegionFlag.Advanced flag) {
         return null;
     }
 

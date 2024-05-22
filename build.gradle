@@ -58,6 +58,7 @@ dependencies {
     implementation fileTree(dir: 'lib', include: ['*.jar'])
 
     implementation 'it.unimi.dsi:fastutil:8.5.12'
+    implementation 'org.rocksdb:rocksdbjni:9.1.1'
 }
 
 jar {

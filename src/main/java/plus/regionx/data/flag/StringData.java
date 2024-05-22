@@ -10,6 +10,13 @@ import java.io.OutputStream;
 public class StringData implements ExtendedFlagData{
     private String value;
 
+    public StringData(){}
+
+    public StringData(String value){
+        this.value = value;
+    }
+
+
     @Override
     public void writeTo(OutputStream stream) throws IOException {
         IoUtils.writeShortString(stream, value);

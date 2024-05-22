@@ -17,7 +17,7 @@ public class RegionDataEx extends RegionData{
     private ImmutableMap<RegionFlag.Advanced, ExtendedFlagData> exFlags = ImmutableMap.of();
 
     @Override
-    public ExtendedFlagData getFlagExtended(RegionFlag.Advanced flag) {
+    public ExtendedFlagData getFlag(RegionFlag.Advanced flag) {
         return exFlags.get(flag);
     }
 
