@@ -2,6 +2,7 @@ package plus.regionx;
 
 import net.minecraft.entity.player.EntityPlayer;
 import plus.regionx.data.RegionData;
+import plus.regionx.data.flag.UserData;
 
 
 public class FlagUtils {
@@ -11,10 +12,10 @@ public class FlagUtils {
     // 8 = allow PVE
 
 
-    public static boolean canEditBlock(RegionData data, RegionData.Entry entry, EntityPlayer entity){
+    public static boolean canEditBlock(RegionData data, UserData userData, EntityPlayer entity){
         if(canPlayerEditBlock(data))return true;
         if(entity == null)return false;
-        return entry.isMember();
+        return userData.isMember();
     }
 
 

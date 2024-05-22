@@ -14,6 +14,7 @@ import plus.region.RegionQuery;
 import plus.regionx.access.WorldFieldAccess;
 import plus.regionx.access.WorldLocal;
 import plus.regionx.data.RegionData;
+import plus.regionx.data.flag.UserData;
 
 
 public class RegionCmd extends CommandBase {
@@ -60,19 +61,19 @@ public class RegionCmd extends CommandBase {
                         for (Region region : regions) {
                             RegionData data = region.getData(local.getDataManager());
                             if(data != null){
-                                ImmutableCollection<RegionData.Entry> users = data.getEntries();
+                                ImmutableCollection<UserData> users = data.getEntries();
                                 if(!users.isEmpty()){
                                     StringBuilder builder = new StringBuilder();
 
-                                    for (RegionData.Entry entry: users){
-                                        if(entry.isCreator()){
+                                    for (UserData userData : users){
+                                        if(userData.isCreator()){
                                             builder.append("C:");
-                                        } else if(entry.isManager()){
+                                        } else if(userData.isManager()){
                                             builder.append("M");
-                                        } else if(!entry.isMember()){
+                                        } else if(!userData.isMember()){
                                             continue;
                                         }
-                                        builder.append(entry.getName()).append(",");
+                                        builder.append(userData.getName()).append(",");
                                     }
 
                                     if(builder.length() > 0) {
@@ -110,8 +111,8 @@ public class RegionCmd extends CommandBase {
                         l2: for (Region region : regions) {
                             RegionData data = region.getData(local.getDataManager());
                             if(data != null){
-                                RegionData.Entry entry = data.getEntry(entity.getUniqueID());
-                                if(entry != null && entry.isCreator()){
+                                UserData userData = data.getEntry(entity.getUniqueID());
+                                if(userData != null && userData.isCreator()){
                                     continue l2;
                                 }
                             }

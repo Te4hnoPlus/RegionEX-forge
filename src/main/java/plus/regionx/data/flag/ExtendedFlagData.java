@@ -1,4 +1,4 @@
-package plus.regionx.data;
+package plus.regionx.data.flag;
 
 import plus.region.utl.FastExitException;
 import java.io.IOException;

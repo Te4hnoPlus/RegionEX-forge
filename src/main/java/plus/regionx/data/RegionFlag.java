@@ -1,6 +1,8 @@
 package plus.regionx.data;
 
 
+import plus.regionx.data.flag.ExtendedFlagData;
+
 public class RegionFlag {
     final String name;
     final int id;

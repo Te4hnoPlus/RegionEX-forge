@@ -21,7 +21,7 @@ public class RocksRegionDataCoder implements RocksDataManager.Coder<RegionData> 
     public byte[] code(RegionData obj) {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         try {
-            RegionData.writeTo(obj, out);
+            obj.writeTo(out);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

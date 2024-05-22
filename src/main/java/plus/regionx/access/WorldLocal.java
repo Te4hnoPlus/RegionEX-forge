@@ -27,7 +27,7 @@ public class WorldLocal {
         if(regionMapEx != null) return;
 
         if(!world.isRemote){
-            File file = new File(world.getSaveHandler().getWorldDirectory(), "regionx");
+            File file = new File(world.getSaveHandler().getWorldDirectory(), "DIM"+world.provider.getDimension()+"RX");
             regionMapEx = new RegionMapEx(file);
 
             service = MainRegionEX.getExecutor(world.getMinecraftServer());
@@ -36,7 +36,6 @@ public class WorldLocal {
             dataManager = new Int2ObjectOpenHashMap<>();
             regionMapEx = new RegionMapEx(null);
         }
-
         context = regionMapEx.newContext();
     }
 

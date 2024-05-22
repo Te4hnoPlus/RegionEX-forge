@@ -5,7 +5,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.world.BlockEvent;
-import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import plus.region.Region;
 import plus.region.RegionQuery;
@@ -13,6 +12,7 @@ import plus.regionx.FlagUtils;
 import plus.regionx.access.WorldFieldAccess;
 import plus.regionx.access.WorldLocal;
 import plus.regionx.data.RegionData;
+import plus.regionx.data.flag.UserData;
 
 
 public class BlockProtector extends BaseProtector{
@@ -69,9 +69,9 @@ public class BlockProtector extends BaseProtector{
             RegionData data = region.getData(local.getDataManager());
             if(data == null) continue;
 
-            RegionData.Entry entry = data.getEntry(player.getUniqueID());
+            UserData userData = data.getEntry(player.getUniqueID());
 
-            if(!FlagUtils.canEditBlock(data, entry, player)) {
+            if(!FlagUtils.canEditBlock(data, userData, player)) {
                 return false;
             }
         }

@@ -5,6 +5,8 @@ import com.google.common.collect.ImmutableMap;
 import net.minecraft.entity.player.EntityPlayer;
 import plus.region.utl.FastExitException;
 import plus.regionx.MainRegionEX;
+import plus.regionx.data.flag.ExtendedFlagData;
+import plus.regionx.data.flag.UserData;
 import plus.tson.utl.Te4HashSet;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,28 +18,28 @@ import java.util.UUID;
 import static plus.region.data.IoUtils.*;
 
 
-public class RegionData {
-    ImmutableMap<UUID, Entry> data = ImmutableMap.of();
+public class RegionData implements ExtendedFlagData{
+    ImmutableMap<UUID, UserData> data = ImmutableMap.of();
     long createTime;
     int flags;
 
-    public Entry getOrAddEntry(EntityPlayer player){
-        Entry entry = data.get(player.getUniqueID());
-        if(entry != null) return entry;
+    public UserData getOrAddEntry(EntityPlayer player){
+        UserData userData = data.get(player.getUniqueID());
+        if(userData != null) return userData;
 
-        entry = new Entry(player);
+        userData = new UserData(player);
 
-        addEntry(entry);
-        return entry;
+        addEntry(userData);
+        return userData;
     }
 
 
-    public ImmutableCollection<Entry> getEntries() {
+    public ImmutableCollection<UserData> getEntries() {
         return data.values();
     }
 
 
-    public Entry getEntry(UUID uuid) {
+    public UserData getEntry(UUID uuid) {
         return data.get(uuid);
     }
 
@@ -83,13 +85,13 @@ public class RegionData {
     }
 
 
-    protected void addEntry(Entry entry) {
+    protected void addEntry(UserData userData) {
         if(data.size() >= 65535) {
             MainRegionEX.log.warn("Too many users in region");
             return;
         }
-        HashMap<UUID, Entry> copy = new HashMap<>(data);
-        copy.put(entry.getUUID(), entry);
+        HashMap<UUID, UserData> copy = new HashMap<>(data);
+        copy.put(userData.getUUID(), userData);
         data = ImmutableMap.copyOf(copy);
     }
 
@@ -99,106 +101,47 @@ public class RegionData {
             MainRegionEX.log.warn("User [{}] not member is this region", uuid.toString());
             return;
         }
-        HashMap<UUID, Entry> copy = new HashMap<>(data);
+        HashMap<UUID, UserData> copy = new HashMap<>(data);
         copy.remove(uuid);
         data = ImmutableMap.copyOf(copy);
     }
 
 
-    public ImmutableCollection<Entry> getRawData() {
+    public ImmutableCollection<UserData> getRawData() {
         return data.values();
     }
 
 
-    public Set<Entry> getPlayers() {
-        Te4HashSet<Entry> set = new Te4HashSet<>();
-        for (Entry entry : data.values()) {
-            set.add(entry);
+    public Set<UserData> getPlayers() {
+        Te4HashSet<UserData> set = new Te4HashSet<>();
+        for (UserData userData : data.values()) {
+            set.add(userData);
         }
         return set;
     }
 
 
-    public static class Entry {
-        private final UUID uuid;
-        private String name;
-        private long bits;
-        private byte flags;
-        // 1 - user is creator
-        // 2 - user is member
-        // 4 - user is manager
+    @Override
+    public void writeTo(OutputStream stream) throws IOException {
+        writeShort(stream, data.size());
 
-        public Entry(byte flags, UUID uuid, String name, long lastLogin) {
-            this.flags = flags;
-            this.uuid = uuid;
-            this.name = name;
-            this.bits = lastLogin;
-        }
-
-
-        public Entry(UUID uuid, String name, long lastLogin) {
-            this((byte) 2, uuid, name, lastLogin);
-        }
-
-
-        public Entry(EntityPlayer player) {
-            this(player.getUniqueID(), player.getName(), System.currentTimeMillis());
-        }
-
-
-        public UUID getUUID() {
-            return uuid;
-        }
-
-
-        public String getName() {
-            return name;
-        }
-
-
-        public boolean isCreator(){
-            return (flags & 1) == 1;
-        }
-
-
-        public boolean isMember(){
-            return (flags & 2) == 2;
-        }
-
-
-        public boolean isManager(){
-            return (flags & 4) == 4;
-        }
-
-
-        public void setCreator(boolean b){
-            if(b)  flags |= 7;
-            else   flags &= ~1;
-        }
-
-
-        public boolean setManager(boolean b){
-            if(b)  flags |= 6;
-            else   flags &= ~4;
-            return true;
-        }
-
-
-        public byte getFlags() {
-            return flags;
-        }
-
-
-        public void setFlags(byte userFlags) {
-            this.flags = userFlags;
-        }
-
-
-        public long lastLoginMillis(){
-            return bits;
+        for(Map.Entry<UUID, UserData> entry : data.entrySet()) {
+            entry.getValue().writeTo(stream);
         }
     }
 
+
+    @Override
+    public void readFrom(InputStream stream) throws IOException, FastExitException {
+        int size = readShort(stream);
+        HashMap<UUID, UserData> temp = new HashMap<>(size);
+        for(int i = 0; i < size; i++) {
+            UserData userData = new UserData();
+            userData.readFrom(stream);
+            temp.put(userData.getUUID(), userData);
+        }
+        data = ImmutableMap.copyOf(temp);
+    }
 
 
     public static void writeTo(RegionData data, OutputStream stream) throws IOException {
@@ -209,11 +152,8 @@ public class RegionData {
             bits &= ~1;
         }
         writeLong(stream, bits);
-        writeShort(stream, data.data.size());
 
-        for(Map.Entry<UUID, Entry> entry : data.data.entrySet()) {
-            writeTo(entry.getValue(), stream);
-        }
+        data.writeTo(stream);
     }
 
 
@@ -228,33 +168,7 @@ public class RegionData {
         }
         data.createTime = bits;
 
-        int size = readShort(stream);
-        HashMap<UUID, Entry> temp = new HashMap<>(size);
-        for(int i = 0; i < size; i++) {
-            Entry entry = readUserFrom(stream);
-            temp.put(entry.getUUID(), entry);
-        }
-        data.data = ImmutableMap.copyOf(temp);
+        data.readFrom(stream);
         return data;
-    }
-
-
-    public static void writeTo(Entry entry, OutputStream stream) throws IOException {
-        stream.write(entry.flags);
-        writeLong(stream, entry.bits);
-        writeUUID(stream, entry.uuid);
-        writeShortString(stream, entry.name);
-    }
-
-
-    public static Entry readUserFrom(InputStream stream) throws IOException, FastExitException {
-        int userFlags = stream.read();
-        if(userFlags == -1) throw FastExitException.INSTANCE;
-
-        long joinTime = readLong(stream);
-        UUID uuid = readUUID(stream);
-        String lastName = readShortString(stream);
-
-        return new Entry((byte) userFlags, uuid, lastName, joinTime);
     }
 }
